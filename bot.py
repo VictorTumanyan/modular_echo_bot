@@ -1,8 +1,20 @@
-from config.config import load_config
+import asyncio
 
-config = load_config('./.env')
+from aiogram import Bot, Dispatcher
+from config.config import Config, load_config
+from handlers import user_handlers, other_handlers
 
-bot_token = config.tg_bot.token
-superadmin = config.tg_bot.admin_ids[0]
+async def main() -> None:
+    config: Config = load_config()
 
-print(config.tg_bot.token)
+    bot = Bot(token=config.tg_bot.token)
+    dp = Dispatcher()
+
+    dp.include_router(user_handlers.router)
+    dp.include_router(other_handlers.router)
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
+
+if __name__ == '__main__':
+    asyncio.run(main())
